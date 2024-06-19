@@ -2,6 +2,16 @@ package impl;
 
 import api.PilaTDA;
 
+class NodoPila {
+    String valor;
+    NodoPila siguiente;
+    
+    NodoPila(String valor) {
+        this.valor = valor;
+        siguiente = null;
+    }
+}
+
 public class PilaEstatica implements PilaTDA {
     int[] vector;
     int i;
@@ -16,7 +26,7 @@ public class PilaEstatica implements PilaTDA {
         i++;
     }
 
-    public String Desapilar() {
+    public void Desapilar() {
         i--;
     }
 

@@ -1,94 +1,20 @@
 package impl;
 
 import api.MapaCiudadesTDA;
-import api.PilaTDA;
-import api.Ruta;
-
-import java.util.ArrayList;
-import impl.ColaPrioridadEstatica;
-import impl.PilaEstatica;
-
-import impl.ArbolBinarioBusqueda;
-
-
-class NodoCiudad {
-    String ciudad;
-    NodoCiudad hijoIzq;
-    NodoCiudad hijoDer;
-    NodoRuta rutas;
-
-    NodoCiudad(String ciudad) {
-        this.ciudad = ciudad;
-        this.hijoIzq = null;
-        this.hijoDer = null;
-        this.rutas = null;
-    }
-}
-
-class NodoProvincia {
-    String provincia;
-    NodoProvincia hijoIzq;
-    NodoProvincia hijoDer;
-    NodoCiudad ciudades;
-
-    NodoProvincia(String provincia) {
-        this.provincia = provincia;
-        this.hijoIzq = null;
-        this.hijoDer = null;
-        this.ciudades = null;
-    }
-}
-
-class NodoRuta {
-    String destino;
-    int distancia;
-    NodoRuta siguiente;
-
-    NodoRuta(String destino, int distancia) {
-        this.destino = destino;
-        this.distancia = distancia;
-        this.siguiente = null;
-    }
-}
-
-class NodoDistancia {
-    String ciudad;
-    int distancia;
-    
-    NodoDistancia(String ciudad, int distancia) {
-        this.ciudad = ciudad;
-        this.distancia = distancia;
-    }
-}
+import java.util.*;
 
 public class MapaCiudades implements MapaCiudadesTDA {
-    public NodoProvincia raizProvincias;
+    private Map<String, List<String>> provincias = new HashMap<>();
+    private Map<String, Map<String, Integer>> rutas = new HashMap<>();
 
     public void inicializarMapa() {
-        raizProvincias = null;
-        cargarDatosIniciales();
-    }
+        // Provincias y ciudades
+        provincias.put("Buenos Aires", new ArrayList<>(Arrays.asList("La Plata", "Mar del Plata", "CABA", "Tandil")));
+        provincias.put("Córdoba", new ArrayList<>(Arrays.asList("Ciudad de Córdoba", "Río Cuarto", "Villa Carlos Paz")));
+        provincias.put("Salta", new ArrayList<>(Arrays.asList("Cafayate")));
+        provincias.put("Chubut", new ArrayList<>(Arrays.asList("Rawson", "Trelew", "Puerto Madryn")));
 
-    public void cargarDatosIniciales() {
-        agregarProvincia("Buenos Aires");
-        agregarCiudad("Buenos Aires", "La Plata");
-        agregarCiudad("Buenos Aires", "Mar del Plata");
-        agregarCiudad("Buenos Aires", "CABA");
-        agregarCiudad("Buenos Aires", "Tandil");
-
-        agregarProvincia("Córdoba");
-        agregarCiudad("Córdoba", "Ciudad de Córdoba");
-        agregarCiudad("Córdoba", "Río Cuarto");
-        agregarCiudad("Córdoba", "Villa Carlos Paz");
-
-        agregarProvincia("Salta");
-        agregarCiudad("Salta", "Cafayate");
-
-        agregarProvincia("Chubut");
-        agregarCiudad("Chubut", "Rawson");
-        agregarCiudad("Chubut", "Trelew");
-        agregarCiudad("Chubut", "Puerto Madryn");
-
+        // Rutas entre ciudades
         agregarRuta("CABA", "Mar del Plata", 400);
         agregarRuta("CABA", "La Plata", 60);
         agregarRuta("CABA", "Tandil", 350);
@@ -109,355 +35,122 @@ public class MapaCiudades implements MapaCiudadesTDA {
         agregarRuta("Rawson", "Trelew", 20);
     }
 
-    // Métodos para manejar provincias
-    public void agregarProvincia(String provincia) {
-        raizProvincias = agregarProvinciaRec(raizProvincias, provincia);
+    private void agregarRuta(String origen, String destino, int distancia) {
+        rutas.putIfAbsent(origen, new HashMap<>());
+        rutas.get(origen).put(destino, distancia);
     }
 
-    public NodoProvincia agregarProvinciaRec(NodoProvincia nodo, String provincia) {
-        if (nodo == null) {
-            return new NodoProvincia(provincia);
-        } else if (provincia.compareTo(nodo.provincia) < 0) {
-            nodo.hijoIzq = agregarProvinciaRec(nodo.hijoIzq, provincia);
-        } else if (provincia.compareTo(nodo.provincia) > 0) {
-            nodo.hijoDer = agregarProvinciaRec(nodo.hijoDer, provincia);
+    public void listarProvincias() {
+        for (Map.Entry<String, List<String>> entry : provincias.entrySet()) {
+            System.out.println(entry.getKey() + ": " + String.join(", ", entry.getValue()));
         }
-        return nodo;
-    }
-
-    public void eliminarProvincia(String provincia) {
-        raizProvincias = eliminarProvinciaRec(raizProvincias, provincia);
-    }
-
-    public NodoProvincia eliminarProvinciaRec(NodoProvincia nodo, String provincia) {
-        if (nodo == null) return null;
-
-        if (provincia.compareTo(nodo.provincia) < 0) {
-            nodo.hijoIzq = eliminarProvinciaRec(nodo.hijoIzq, provincia);
-        } else if (provincia.compareTo(nodo.provincia) > 0) {
-            nodo.hijoDer = eliminarProvinciaRec(nodo.hijoDer, provincia);
-        } else {
-            if (nodo.hijoIzq == null) return nodo.hijoDer;
-            if (nodo.hijoDer == null) return nodo.hijoIzq;
-
-            NodoProvincia temp = buscarMin(nodo.hijoDer);
-            nodo.provincia = temp.provincia;
-            nodo.ciudades = temp.ciudades;
-            nodo.hijoDer = eliminarProvinciaRec(nodo.hijoDer, temp.provincia);
-        }
-        return nodo;
-    }
-
-    public NodoProvincia buscarMin(NodoProvincia nodo) {
-        while (nodo.hijoIzq != null) nodo = nodo.hijoIzq;
-        return nodo;
     }
 
     public void agregarCiudad(String provincia, String ciudad) {
-        NodoProvincia nodoProvincia = buscarProvincia(raizProvincias, provincia);
-        if (nodoProvincia != null) {
-            nodoProvincia.ciudades = agregarCiudadRec(nodoProvincia.ciudades, ciudad);
-        }
-    }
-
-    public NodoCiudad agregarCiudadRec(NodoCiudad nodo, String ciudad) {
-        if (nodo == null) {
-            return new NodoCiudad(ciudad);
-        } else if (ciudad.compareTo(nodo.ciudad) < 0) {
-            nodo.hijoIzq = agregarCiudadRec(nodo.hijoIzq, ciudad);
-        } else if (ciudad.compareTo(nodo.ciudad) > 0) {
-            nodo.hijoDer = agregarCiudadRec(nodo.hijoDer, ciudad);
-        }
-        return nodo;
+        provincias.putIfAbsent(provincia, new ArrayList<>());
+        provincias.get(provincia).add(ciudad);
     }
 
     public void eliminarCiudad(String provincia, String ciudad) {
-        NodoProvincia nodoProvincia = buscarProvincia(raizProvincias, provincia);
-        if (nodoProvincia != null) {
-            nodoProvincia.ciudades = eliminarCiudadRec(nodoProvincia.ciudades, ciudad);
+        if (provincias.containsKey(provincia)) {
+            provincias.get(provincia).remove(ciudad);
         }
     }
 
-    public NodoCiudad eliminarCiudadRec(NodoCiudad nodo, String ciudad) {
-        if (nodo == null) return null;
-
-        if (ciudad.compareTo(nodo.ciudad) < 0) {
-            nodo.hijoIzq = eliminarCiudadRec(nodo.hijoIzq, ciudad);
-        } else if (ciudad.compareTo(nodo.ciudad) > 0) {
-            nodo.hijoDer = eliminarCiudadRec(nodo.hijoDer, ciudad);
-        } else {
-            if (nodo.hijoIzq == null) return nodo.hijoDer;
-            if (nodo.hijoDer == null) return nodo.hijoIzq;
-
-            NodoCiudad temp = buscarMinCiudad(nodo.hijoDer);
-            nodo.ciudad = temp.ciudad;
-            nodo.hijoIzq = temp.hijoIzq;
-            nodo.hijoDer = eliminarCiudadRec(nodo.hijoDer, temp.ciudad);
-        }
-        return nodo;
-    }
-
-    public NodoCiudad buscarMinCiudad(NodoCiudad nodo) {
-        while (nodo.hijoIzq != null) nodo = nodo.hijoIzq;
-        return nodo;
-    }
-
-    public String[] listarProvincias() {
-        ArrayList<String> provinciasList = new ArrayList<>();
-        listarProvinciasRec(raizProvincias, provinciasList);
-        return provinciasList.toArray(new String[0]);
-    }
-
-    public void listarProvinciasRec(NodoProvincia nodo, ArrayList<String> provinciasList) {
-        if (nodo != null) {
-            listarProvinciasRec(nodo.hijoIzq, provinciasList);
-            provinciasList.add(nodo.provincia);
-            listarProvinciasRec(nodo.hijoDer, provinciasList);
+    public void ciudadesVecinas(String ciudad) {
+        if (rutas.containsKey(ciudad)) {
+            System.out.println(String.join(", ", rutas.get(ciudad).keySet()));
         }
     }
 
-    public String[] listarCiudades(String provincia) {
-        NodoProvincia nodoProvincia = buscarProvincia(raizProvincias, provincia);
-        if (nodoProvincia != null) {
-            ArrayList<String> ciudadesList = new ArrayList<>();
-            listarCiudadesRec(nodoProvincia.ciudades, ciudadesList);
-            return ciudadesList.toArray(new String[0]);
-        }
-        return new String[0];
-    }
-
-    public void listarCiudadesRec(NodoCiudad nodo, ArrayList<String> ciudadesList) {
-        if (nodo != null) {
-            listarCiudadesRec(nodo.hijoIzq, ciudadesList);
-            ciudadesList.add(nodo.ciudad);
-            listarCiudadesRec(nodo.hijoDer, ciudadesList);
-        }
-    }
-
-    public NodoProvincia buscarProvincia(NodoProvincia nodo, String provincia) {
-        if (nodo == null) return null;
-        if (provincia.equals(nodo.provincia)) return nodo;
-        if (provincia.compareTo(nodo.provincia) < 0) return buscarProvincia(nodo.hijoIzq, provincia);
-        return buscarProvincia(nodo.hijoDer, provincia);
-    }
-
-    // Métodos para manejar rutas
-    public void agregarRuta(String origen, String destino, int distancia) {
-        NodoCiudad nodoOrigen = buscarCiudad(origen);
-        if (nodoOrigen != null) {
-            nodoOrigen.rutas = agregarRutaRec(nodoOrigen.rutas, destino, distancia);
-        }
-    }
-
-    public NodoRuta agregarRutaRec(NodoRuta nodo, String destino, int distancia) {
-        if (nodo == null) {
-            return new NodoRuta(destino, distancia);
-        } else if (destino.compareTo(nodo.destino) < 0) {
-            nodo.siguiente = agregarRutaRec(nodo.siguiente, destino, distancia);
-        }
-        return nodo;
-    }
-
-    public void eliminarRuta(String origen, String destino) {
-        NodoCiudad nodoOrigen = buscarCiudad(origen);
-        if (nodoOrigen != null) {
-            nodoOrigen.rutas = eliminarRutaRec(nodoOrigen.rutas, destino);
-        }
-    }
-
-    public NodoRuta eliminarRutaRec(NodoRuta nodo, String destino) {
-        if (nodo == null) return null;
-
-        if (destino.equals(nodo.destino)) {
-            return nodo.siguiente;
-        } else {
-            nodo.siguiente = eliminarRutaRec(nodo.siguiente, destino);
-            return nodo;
-        }
-    }
-
-    public NodoCiudad buscarCiudad(String ciudad) {
-        NodoCiudad nodoCiudad = null;
-        buscarCiudadRec(raizProvincias, ciudad, nodoCiudad);
-        return nodoCiudad;
-    }
-
-    public void buscarCiudadRec(NodoProvincia nodoProvincia, String ciudad, NodoCiudad nodoCiudad) {
-        if (nodoProvincia != null) {
-            nodoCiudad = buscarCiudadEnProvincia(nodoProvincia.ciudades, ciudad);
-            if (nodoCiudad == null) {
-                buscarCiudadRec(nodoProvincia.hijoIzq, ciudad, nodoCiudad);
-                buscarCiudadRec(nodoProvincia.hijoDer, ciudad, nodoCiudad);
-            }
-        }
-    }
-
-    public NodoCiudad buscarCiudadEnProvincia(NodoCiudad nodo, String ciudad) {
-        if (nodo == null) return null;
-        if (ciudad.equals(nodo.ciudad)) return nodo;
-        if (ciudad.compareTo(nodo.ciudad) < 0) return buscarCiudadEnProvincia(nodo.hijoIzq, ciudad);
-        return buscarCiudadEnProvincia(nodo.hijoDer, ciudad);
-    }
-
-    public String[] ciudadesVecinas(String ciudad) {
-        NodoCiudad nodoCiudad = buscarCiudad(ciudad);
-        if (nodoCiudad != null) {
-            ArrayList<String> vecinasList = new ArrayList<>();
-            NodoRuta ruta = nodoCiudad.rutas;
-            while (ruta != null) {
-                vecinasList.add(ruta.destino);
-                ruta = ruta.siguiente;
-            }
-            return vecinasList.toArray(new String[0]);
-        }
-        return new String[0];
-    }
-
-    public String[] ciudadesPuente(String ciudadA, String ciudadB) {
-        NodoCiudad nodoCiudadA = buscarCiudad(ciudadA);
-        NodoCiudad nodoCiudadB = buscarCiudad(ciudadB);
-        ArrayList<String> puentes = new ArrayList<>();
-        if (nodoCiudadA != null && nodoCiudadB != null) {
-            NodoRuta rutaA = nodoCiudadA.rutas;
-            while (rutaA != null) {
-                NodoCiudad nodoIntermedio = buscarCiudad(rutaA.destino);
-                if (nodoIntermedio != null && buscarRuta(nodoIntermedio.rutas, ciudadB) != null) {
-                    puentes.add(rutaA.destino);
+    public void ciudadesPuente(String ciudadA, String ciudadB) {
+        List<String> puentes = new ArrayList<>();
+        if (rutas.containsKey(ciudadA)) {
+            for (String ciudad : rutas.get(ciudadA).keySet()) {
+                if (rutas.containsKey(ciudad) && rutas.get(ciudad).containsKey(ciudadB)) {
+                    puentes.add(ciudad);
                 }
-                rutaA = rutaA.siguiente;
             }
         }
-        return puentes.toArray(new String[0]);
+        System.out.println(String.join(", ", puentes));
     }
 
-    public NodoRuta buscarRuta(NodoRuta nodo, String destino) {
-        while (nodo != null) {
-            if (nodo.destino.equals(destino)) {
-                return nodo;
+    public void ciudadesPredecesoras(String ciudad) {
+        List<String> predecesoras = new ArrayList<>();
+        for (String key : rutas.keySet()) {
+            if (rutas.get(key).containsKey(ciudad)) {
+                predecesoras.add(key);
             }
-            nodo = nodo.siguiente;
         }
-        return null;
+        System.out.println(String.join(", ", predecesoras));
     }
 
-    public String[] ciudadesPredecesoras(String ciudad) {
-        ArrayList<String> predecesorasList = new ArrayList<>();
-        buscarPredecesorasRec(raizProvincias, ciudad, predecesorasList);
-        return predecesorasList.toArray(new String[0]);
-    }
-
-    public void buscarPredecesorasRec(NodoProvincia nodoProvincia, String ciudad, ArrayList<String> predecesorasList) {
-        if (nodoProvincia != null) {
-            buscarPredecesorasEnCiudad(nodoProvincia.ciudades, ciudad, predecesorasList);
-            buscarPredecesorasRec(nodoProvincia.hijoIzq, ciudad, predecesorasList);
-            buscarPredecesorasRec(nodoProvincia.hijoDer, ciudad, predecesorasList);
+    public void ciudadesExtremo() {
+        List<String> extremos = new ArrayList<>();
+        for (String ciudad : rutas.keySet()) {
+            if (rutas.get(ciudad).isEmpty()) {
+                extremos.add(ciudad);
+            }
         }
+        System.out.println(String.join(", ", extremos));
     }
 
-    public void buscarPredecesorasEnCiudad(NodoCiudad nodo, String ciudad, ArrayList<String> predecesorasList) {
-        if (nodo != null) {
-            NodoRuta ruta = nodo.rutas;
-            while (ruta != null) {
-                if (ruta.destino.equals(ciudad)) {
-                    predecesorasList.add(nodo.ciudad);
+    public void ciudadesFuertementeConectadas() {
+        List<String> conectadas = new ArrayList<>();
+        for (String origen : rutas.keySet()) {
+            for (String destino : rutas.get(origen).keySet()) {
+                if (rutas.containsKey(destino) && rutas.get(destino).containsKey(origen)) {
+                    conectadas.add(origen + " - " + destino);
                 }
-                ruta = ruta.siguiente;
             }
-            buscarPredecesorasEnCiudad(nodo.hijoIzq, ciudad, predecesorasList);
-            buscarPredecesorasEnCiudad(nodo.hijoDer, ciudad, predecesorasList);
         }
+        System.out.println(String.join(", ", conectadas));
     }
 
-    public String[] ciudadesExtremo() {
-        ArrayList<String> extremosList = new ArrayList<>();
-        buscarExtremosRec(raizProvincias, extremosList);
-        return extremosList.toArray(new String[0]);
-    }
+    public void caminoMasCorto(String ciudadA, String ciudadB) {
+        // Implementación del algoritmo de Dijkstra
+        Map<String, Integer> distancias = new HashMap<>();
+        Map<String, String> predecesores = new HashMap<>();
+        Set<String> visitados = new HashSet<>();
+        PriorityQueue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(Map.Entry.comparingByValue());
 
-    public void buscarExtremosRec(NodoProvincia nodoProvincia, ArrayList<String> extremosList) {
-        if (nodoProvincia != null) {
-            buscarExtremosEnCiudad(nodoProvincia.ciudades, extremosList);
-            buscarExtremosRec(nodoProvincia.hijoIzq, extremosList);
-            buscarExtremosRec(nodoProvincia.hijoDer, extremosList);
-        }
-    }
-
-    public void buscarExtremosEnCiudad(NodoCiudad nodo, ArrayList<String> extremosList) {
-        if (nodo != null) {
-            if (nodo.rutas == null) {
-                extremosList.add(nodo.ciudad);
+        for (String ciudad : rutas.keySet()) {
+            if (ciudad.equals(ciudadA)) {
+                distancias.put(ciudad, 0);
+            } else {
+                distancias.put(ciudad, Integer.MAX_VALUE);
             }
-            buscarExtremosEnCiudad(nodo.hijoIzq, extremosList);
-            buscarExtremosEnCiudad(nodo.hijoDer, extremosList);
+            pq.add(new AbstractMap.SimpleEntry<>(ciudad, distancias.get(ciudad)));
         }
-    }
 
-    public String[] ciudadesFuertementeConectadas() {
-        ArrayList<String> conectadasList = new ArrayList<>();
-        buscarConectadasRec(raizProvincias, conectadasList);
-        return conectadasList.toArray(new String[0]);
-    }
+        while (!pq.isEmpty()) {
+            String actual = pq.poll().getKey();
+            visitados.add(actual);
 
-    public void buscarConectadasRec(NodoProvincia nodoProvincia, ArrayList<String> conectadasList) {
-        if (nodoProvincia != null) {
-            buscarConectadasEnCiudad(nodoProvincia.ciudades, conectadasList);
-            buscarConectadasRec(nodoProvincia.hijoIzq, conectadasList);
-            buscarConectadasRec(nodoProvincia.hijoDer, conectadasList);
-        }
-    }
-
-    public void buscarConectadasEnCiudad(NodoCiudad nodo, ArrayList<String> conectadasList) {
-        if (nodo != null) {
-            NodoRuta ruta = nodo.rutas;
-            while (ruta != null) {
-                NodoCiudad nodoDestino = buscarCiudad(ruta.destino);
-                if (nodoDestino != null && buscarRuta(nodoDestino.rutas, nodo.ciudad) != null) {
-                    conectadasList.add(nodo.ciudad + " <-> " + ruta.destino);
-                }
-                ruta = ruta.siguiente;
-            }
-            buscarConectadasEnCiudad(nodo.hijoIzq, conectadasList);
-            buscarConectadasEnCiudad(nodo.hijoDer, conectadasList);
-        }
-    }
-
-    public String caminoMasCorto(int origen, String destino) {
-        ArbolBinarioBusqueda distancias = new ArbolBinarioBusqueda();
-        ArbolBinarioBusqueda predecesores = new ArbolBinarioBusqueda();
-        ColaPrioridadEstatica cola = new ColaPrioridadEstatica(); // Ajustar capacidad según necesidad
-        distancias.AgregarElem(0);
-        cola.AcolarPrioridad(origen, 0);
-        
-        while (!cola.ColaVacia()) {
-            int actual = cola.Primero();
-            NodoCiudad ciudadActual = ciudades.buscar(actual.ciudad);
-            if (ciudadActual != null) {
-                ListaEnlazada rutas = ciudadActual.rutas;
-                while (!rutas.esVacia()) {
-                    NodoRuta ruta = rutas.extraer();
-                    int nuevaDistancia = actual + ruta.distancia;
-                    String distanciaExistente = distancias.buscar(nuevaDistancia);
-                    if (distanciaExistente == null || nuevaDistancia < Integer.parseInt(distanciaExistente)) {
-                        distancias.insertar(nuevaDistancia, ruta.destino);
-                        predecesores.insertar(nuevaDistancia, actual.ciudad);
-                        cola.insertar(new NodoDistancia(ruta.destino, nuevaDistancia));
+            for (Map.Entry<String, Integer> vecino : rutas.get(actual).entrySet()) {
+                if (!visitados.contains(vecino.getKey())) {
+                    int nuevaDistancia = distancias.get(actual) + vecino.getValue();
+                    if (nuevaDistancia < distancias.get(vecino.getKey())) {
+                        distancias.put(vecino.getKey(), nuevaDistancia);
+                        predecesores.put(vecino.getKey(), actual);
+                        pq.add(new AbstractMap.SimpleEntry<>(vecino.getKey(), nuevaDistancia));
                     }
                 }
             }
         }
-        
-        int resultado = destino;
-        PilaEstatica pila = new PilaEstatica();
-        while (!resultado.equals(origen)) {
-            pila.Apilar(resultado);
-            resultado = predecesores.buscar(distancias.buscar(resultado));
+
+        // Imprimir el camino más corto
+        List<String> camino = new ArrayList<>();
+        for (String at = ciudadB; at != null; at = predecesores.get(at)) {
+            camino.add(at);
         }
-        pila.Apilar(origen);
-        
-        StringBuilder camino = new StringBuilder();
-        while (!pila.PilaVacia()) {
-            camino.append(pila.Desapilar()).append(" -> ");
+        Collections.reverse(camino);
+
+        if (distancias.get(ciudadB) == Integer.MAX_VALUE) {
+            System.out.println("No hay camino entre " + ciudadA + " y " + ciudadB);
+        } else {
+            System.out.println("Camino más corto entre " + ciudadA + " y " + ciudadB + ": " + String.join(" -> ", camino));
+            System.out.println("Distancia total: " + distancias.get(ciudadB) + " km");
         }
-        return camino.substring(0, camino.length() - 4); // Quitar la flecha final
     }
 }

@@ -2,23 +2,13 @@ package api;
 
 public interface MapaCiudadesTDA {
     void inicializarMapa();
-    void agregarProvincia(String provincia);
-    void eliminarProvincia(String provincia);
+    void listarProvincias();
     void agregarCiudad(String provincia, String ciudad);
     void eliminarCiudad(String provincia, String ciudad);
-    String[] listarProvincias();
-    String[] listarCiudades(String provincia);
-    void agregarRuta(String origen, String destino, int distancia);
-    void eliminarRuta(String origen, String destino);
-    String[] ciudadesVecinas(String ciudad);
-    String[] ciudadesPuente(String ciudadA, String ciudadB);
-    String[] ciudadesPredecesoras(String ciudad);
-    String[] ciudadesExtremo();
-    String[] ciudadesFuertementeConectadas();
-    Ruta caminoMasCorto(String ciudadA, String ciudadB);
-}
-
-public class Ruta {
-    String[] ciudadesIntermedias;
-    int distanciaTotal;
+    void ciudadesVecinas(String ciudad);
+    void ciudadesPuente(String ciudadA, String ciudadB);
+    void ciudadesPredecesoras(String ciudad);
+    void ciudadesExtremo();
+    void ciudadesFuertementeConectadas();
+    void caminoMasCorto(String ciudadA, String ciudadB);
 }

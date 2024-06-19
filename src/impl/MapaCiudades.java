@@ -1,7 +1,15 @@
 package impl;
 
 import api.MapaCiudadesTDA;
+import api.PilaTDA;
+import api.Ruta;
+
 import java.util.ArrayList;
+import impl.ColaPrioridadEstatica;
+import impl.PilaEstatica;
+
+import impl.ArbolBinarioBusqueda;
+
 
 class NodoCiudad {
     String ciudad;
@@ -40,6 +48,16 @@ class NodoRuta {
         this.destino = destino;
         this.distancia = distancia;
         this.siguiente = null;
+    }
+}
+
+class NodoDistancia {
+    String ciudad;
+    int distancia;
+    
+    NodoDistancia(String ciudad, int distancia) {
+        this.ciudad = ciudad;
+        this.distancia = distancia;
     }
 }
 
@@ -403,9 +421,43 @@ public class MapaCiudades implements MapaCiudadesTDA {
         }
     }
 
-    public Ruta caminoMasCorto(String ciudadA, String ciudadB) {
-        // Implementación de búsqueda del camino más corto utilizando un algoritmo de búsqueda.
-        // Se puede usar una variación de Dijkstra para encontrar el camino más corto.
-        return null; // Para simplificar, esta implementación está fuera del alcance de este ejemplo.
+    public String caminoMasCorto(int origen, String destino) {
+        ArbolBinarioBusqueda distancias = new ArbolBinarioBusqueda();
+        ArbolBinarioBusqueda predecesores = new ArbolBinarioBusqueda();
+        ColaPrioridadEstatica cola = new ColaPrioridadEstatica(); // Ajustar capacidad según necesidad
+        distancias.AgregarElem(0);
+        cola.AcolarPrioridad(origen, 0);
+        
+        while (!cola.ColaVacia()) {
+            int actual = cola.Primero();
+            NodoCiudad ciudadActual = ciudades.buscar(actual.ciudad);
+            if (ciudadActual != null) {
+                ListaEnlazada rutas = ciudadActual.rutas;
+                while (!rutas.esVacia()) {
+                    NodoRuta ruta = rutas.extraer();
+                    int nuevaDistancia = actual + ruta.distancia;
+                    String distanciaExistente = distancias.buscar(nuevaDistancia);
+                    if (distanciaExistente == null || nuevaDistancia < Integer.parseInt(distanciaExistente)) {
+                        distancias.insertar(nuevaDistancia, ruta.destino);
+                        predecesores.insertar(nuevaDistancia, actual.ciudad);
+                        cola.insertar(new NodoDistancia(ruta.destino, nuevaDistancia));
+                    }
+                }
+            }
+        }
+        
+        int resultado = destino;
+        PilaEstatica pila = new PilaEstatica();
+        while (!resultado.equals(origen)) {
+            pila.Apilar(resultado);
+            resultado = predecesores.buscar(distancias.buscar(resultado));
+        }
+        pila.Apilar(origen);
+        
+        StringBuilder camino = new StringBuilder();
+        while (!pila.PilaVacia()) {
+            camino.append(pila.Desapilar()).append(" -> ");
+        }
+        return camino.substring(0, camino.length() - 4); // Quitar la flecha final
     }
 }

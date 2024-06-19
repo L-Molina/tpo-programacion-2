@@ -18,7 +18,7 @@ public interface MapaCiudadesTDA {
     Ruta caminoMasCorto(String ciudadA, String ciudadB);
 }
 
-class Ruta {
+public class Ruta {
     String[] ciudadesIntermedias;
     int distanciaTotal;
 }

@@ -11,12 +11,12 @@ public class PilaEstatica implements PilaTDA {
         i = 0;
     } 
 
-    public void Apilar(int x) {
-        vector[i] = x;
+    public void Apilar(int resultado) {
+        vector[i] = resultado;
         i++;
     }
 
-    public void Desapilar() {
+    public String Desapilar() {
         i--;
     }
 

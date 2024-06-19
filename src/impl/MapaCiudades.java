@@ -108,12 +108,18 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     public void caminoMasCorto(String ciudadA, String ciudadB) {
+        // Verificar si las ciudades existen en el mapa
+        if (!rutas.containsKey(ciudadA) || !rutas.containsKey(ciudadB)) {
+            System.out.println("Una o ambas ciudades no existen en el mapa.");
+            return;
+        }
+    
         // Implementación del algoritmo de Dijkstra
         Map<String, Integer> distancias = new HashMap<>();
         Map<String, String> predecesores = new HashMap<>();
         Set<String> visitados = new HashSet<>();
         PriorityQueue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(Map.Entry.comparingByValue());
-
+    
         for (String ciudad : rutas.keySet()) {
             if (ciudad.equals(ciudadA)) {
                 distancias.put(ciudad, 0);
@@ -122,35 +128,40 @@ public class MapaCiudades implements MapaCiudadesTDA {
             }
             pq.add(new AbstractMap.SimpleEntry<>(ciudad, distancias.get(ciudad)));
         }
-
+    
         while (!pq.isEmpty()) {
             String actual = pq.poll().getKey();
+            if (distancias.get(actual) == Integer.MAX_VALUE) {
+                break;
+            }
             visitados.add(actual);
-
-            for (Map.Entry<String, Integer> vecino : rutas.get(actual).entrySet()) {
-                if (!visitados.contains(vecino.getKey())) {
-                    int nuevaDistancia = distancias.get(actual) + vecino.getValue();
-                    if (nuevaDistancia < distancias.get(vecino.getKey())) {
-                        distancias.put(vecino.getKey(), nuevaDistancia);
-                        predecesores.put(vecino.getKey(), actual);
-                        pq.add(new AbstractMap.SimpleEntry<>(vecino.getKey(), nuevaDistancia));
+    
+            if (rutas.containsKey(actual)) {
+                for (Map.Entry<String, Integer> vecino : rutas.get(actual).entrySet()) {
+                    if (!visitados.contains(vecino.getKey())) {
+                        int nuevaDistancia = distancias.get(actual) + vecino.getValue();
+                        if (nuevaDistancia < distancias.get(vecino.getKey())) {
+                            distancias.put(vecino.getKey(), nuevaDistancia);
+                            predecesores.put(vecino.getKey(), actual);
+                            pq.add(new AbstractMap.SimpleEntry<>(vecino.getKey(), nuevaDistancia));
+                        }
                     }
                 }
             }
         }
-
+    
         // Imprimir el camino más corto
         List<String> camino = new ArrayList<>();
         for (String at = ciudadB; at != null; at = predecesores.get(at)) {
             camino.add(at);
         }
         Collections.reverse(camino);
-
-        if (distancias.get(ciudadB) == Integer.MAX_VALUE) {
+    
+        if (!distancias.containsKey(ciudadB) || distancias.get(ciudadB) == Integer.MAX_VALUE) {
             System.out.println("No hay camino entre " + ciudadA + " y " + ciudadB);
         } else {
             System.out.println("Camino más corto entre " + ciudadA + " y " + ciudadB + ": " + String.join(" -> ", camino));
             System.out.println("Distancia total: " + distancias.get(ciudadB) + " km");
         }
-    }
+    }    
 }

@@ -4,23 +4,24 @@ import api.MapaCiudadesTDA;
 import java.util.*;
 
 public class MapaCiudades implements MapaCiudadesTDA {
+    // declaramos las hashmaps para las provinvias y las rutas
     private Map<String, List<String>> provincias = new HashMap<>();
     private Map<String, Map<String, Integer>> rutas = new HashMap<>();
 
     public void inicializarMapa() {
-        // Provincias y ciudades
-        provincias.put("Buenos Aires", new ArrayList<>(Arrays.asList("La Plata", "Mar del Plata", "CABA", "Tandil")));
+        // agregamos provincias y ciudades al hashmap
+        provincias.put("Buenos Aires", new ArrayList<>(Arrays.asList("La Plata", "Mar Del Plata", "CABA", "Tandil")));
         provincias.put("Córdoba", new ArrayList<>(Arrays.asList("Ciudad de Córdoba", "Río Cuarto", "Villa Carlos Paz")));
         provincias.put("Salta", new ArrayList<>(Arrays.asList("Cafayate")));
         provincias.put("Chubut", new ArrayList<>(Arrays.asList("Rawson", "Trelew", "Puerto Madryn")));
 
-        // Rutas entre ciudades
-        agregarRuta("CABA", "Mar del Plata", 400);
+        // agregamos rutas entre ciudades al otro hashmap
+        agregarRuta("CABA", "Mar Del Plata", 400);
         agregarRuta("CABA", "La Plata", 60);
         agregarRuta("CABA", "Tandil", 350);
         agregarRuta("CABA", "Ciudad de Córdoba", 1300);
-        agregarRuta("Mar del Plata", "CABA", 500);
-        agregarRuta("Mar del Plata", "Ciudad de Córdoba", 1800);
+        agregarRuta("Mar Del Plata", "CABA", 500);
+        agregarRuta("Mar Del Plata", "Ciudad de Córdoba", 1800);
         agregarRuta("La Plata", "Ciudad de Córdoba", 1500);
         agregarRuta("La Plata", "Rawson", 2700);
         agregarRuta("Tandil", "CABA", 480);
@@ -36,6 +37,7 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     private void agregarRuta(String origen, String destino, int distancia) {
+        // agregamos una nueva ruta, verificando si no existe 
         rutas.putIfAbsent(origen, new HashMap<>());
         rutas.get(origen).put(destino, distancia);
     }
@@ -47,23 +49,27 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     public void agregarCiudad(String provincia, String ciudad) {
+        // agregamos una nueva ciudad, verificando si no existe 
         provincias.putIfAbsent(provincia, new ArrayList<>());
         provincias.get(provincia).add(ciudad);
     }
 
     public void eliminarCiudad(String provincia, String ciudad) {
+        // verificamos si una ciudad existe y la eliminamos del hashmap 
         if (provincias.containsKey(provincia)) {
             provincias.get(provincia).remove(ciudad);
         }
     }
 
     public void ciudadesVecinas(String ciudad) {
+        // listamos las ciudades vecinas al argumento ciudad
         if (rutas.containsKey(ciudad)) {
             System.out.println(String.join(", ", rutas.get(ciudad).keySet()));
         }
     }
 
     public void ciudadesPuente(String ciudadA, String ciudadB) {
+        // listamos la o las ciudades puente entre los argumentos ciudadA y ciudadB
         List<String> puentes = new ArrayList<>();
         if (rutas.containsKey(ciudadA)) {
             for (String ciudad : rutas.get(ciudadA).keySet()) {
@@ -76,6 +82,7 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     public void ciudadesPredecesoras(String ciudad) {
+        // creamos una arrayList para las ciudades predecesoras
         List<String> predecesoras = new ArrayList<>();
         for (String key : rutas.keySet()) {
             if (rutas.get(key).containsKey(ciudad)) {
@@ -86,6 +93,7 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     public void ciudadesExtremo() {
+        // creamos una arrayList para las ciudades extremo
         List<String> extremos = new ArrayList<>();
         for (String ciudad : rutas.keySet()) {
             if (rutas.get(ciudad).isEmpty()) {
@@ -96,6 +104,7 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     public void ciudadesFuertementeConectadas() {
+        // creamos una arrayList para las ciudades fuertemente conectadas
         List<String> conectadas = new ArrayList<>();
         for (String origen : rutas.keySet()) {
             for (String destino : rutas.get(origen).keySet()) {
@@ -108,13 +117,13 @@ public class MapaCiudades implements MapaCiudadesTDA {
     }
 
     public void caminoMasCorto(String ciudadA, String ciudadB) {
-        // Verificar si las ciudades existen en el mapa
+        // verificamos si las ciudades existen en el mapa
         if (!rutas.containsKey(ciudadA) || !rutas.containsKey(ciudadB)) {
             System.out.println("Una o ambas ciudades no existen en el mapa.");
             return;
         }
     
-        // Implementación del algoritmo de Dijkstra
+        // algoritmo de dijkstra
         Map<String, Integer> distancias = new HashMap<>();
         Map<String, String> predecesores = new HashMap<>();
         Set<String> visitados = new HashSet<>();
@@ -150,13 +159,15 @@ public class MapaCiudades implements MapaCiudadesTDA {
             }
         }
     
-        // Imprimir el camino más corto
+        // creamos una arrayList para el camino mas cortp
         List<String> camino = new ArrayList<>();
         for (String at = ciudadB; at != null; at = predecesores.get(at)) {
             camino.add(at);
         }
         Collections.reverse(camino);
     
+        // verificamos si existe camino entre los argumentos ciudadA y ciudadB. 
+        // Si existen, listamos el camino mas corto entre ambas y la distancia total
         if (!distancias.containsKey(ciudadB) || distancias.get(ciudadB) == Integer.MAX_VALUE) {
             System.out.println("No hay camino entre " + ciudadA + " y " + ciudadB);
         } else {
